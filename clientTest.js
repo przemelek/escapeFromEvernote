@@ -67,9 +67,15 @@ var notebooks = noteStore.listNotebooks(function(err, notebooks) {
       var noteFilter = new Evernote.NoteFilter();
       noteFilter.notebookGuid=defaultNotebook.guid;
       console.log(noteFilter);
-      var spec = Evernote.NotesMetadataResultSpec();
-      //var list = noteStore.findNotesMetadata(noteFilter,0,1000,spec);
-      var list = noteStore.findNotes(noteFilter,0,1000,function(err,notes) {
+
+      var spec = new Evernote.NotesMetadataResultSpec();
+      spec.includeTitle=true;
+      var list = noteStore.findNotesMetadata(noteFilter,0,1000,spec,function(err,notes) {;
+      // var list = noteStore.findNotes(noteFilter,0,1000,function(err,notes) {
+        if (err) {
+          console.log("Error!!!!!");
+          console.log(err);
+        }
         // console.log(notes);
         var tags=[];
         var notes2Tags = {};
