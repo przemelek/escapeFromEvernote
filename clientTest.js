@@ -1,13 +1,14 @@
-// base on https://github.com/evernote/evernote-sdk-js/blob/master/sample/client/EDAMTest.js
 fs = require('fs');
 crypto = require('crypto');
-Evernote = require('evernote').Evernote;
+Evernote = require('evernote');
+AuthToken = require("./AuthToken.js");
 
 // Real applications authenticate with Evernote using OAuth, but for the
 // purpose of exploring the API, you can get a developer token that allows
 // you to access your own Evernote account. To get a developer token, visit
 // https://sandbox.evernote.com/api/DeveloperToken.action
-var authToken = "<your developer token goes here>";
+
+var authToken = AuthToken.token;
 
 var pathToBackup = "backup/"
 if (process.argv.length>2) {
@@ -35,7 +36,6 @@ if (authToken == "<your developer token goes here>") {
 var isSandbox = false;
 var isChina = false;
 var client = new Evernote.Client({token: authToken, sandbox: isSandbox, china: isChina});
-
 var userStore = client.getUserStore();
 
 userStore.checkVersion(
@@ -43,6 +43,7 @@ userStore.checkVersion(
   Evernote.EDAM_VERSION_MAJOR,
   Evernote.EDAM_VERSION_MINOR,
   function(err, versionOk) {
+    console.log(err);
     console.log("Is my Evernote API version up to date? " + versionOk);
     console.log();
     if (!versionOk) {
@@ -55,8 +56,9 @@ var noteStore = client.getNoteStore();
 
 // List all of the notebooks in the user's account
 var defaultNotebook = null;
-var notebooks = noteStore.listNotebooks(function(err, notebooks) {
+var notebooks = noteStore.listNotebooks().then(function(notebooks) {
   console.log("Toster1");
+  // console.log(err);
   console.log("Found " + notebooks.length + " notebooks:");
   for (var i in notebooks) {
     if (notebooks[i].name=='#cookbook') {
@@ -64,24 +66,25 @@ var notebooks = noteStore.listNotebooks(function(err, notebooks) {
       defaultNotebook = notebooks[i];
       console.log(defaultNotebook);
       // console.log(defaultNotebook.guid);
-      var noteFilter = new Evernote.NoteFilter();
+      var noteFilter = new Evernote.NoteStore.NoteFilter();
       noteFilter.notebookGuid=defaultNotebook.guid;
       console.log(noteFilter);
+      console.log("Toster3");
 
-      var spec = new Evernote.NotesMetadataResultSpec();
+      var spec = new Evernote.NoteStore.NotesMetadataResultSpec();
       spec.includeTitle=true;
-      var list = noteStore.findNotesMetadata(noteFilter,0,1000,spec,function(err,notes) {;
+      var list = noteStore.findNotesMetadata(noteFilter,0,1000,spec).then(function(notes) {
       // var list = noteStore.findNotes(noteFilter,0,1000,function(err,notes) {
-        if (err) {
-          console.log("Error!!!!!");
-          console.log(err);
-        }
+        // if (err) {
+        //   console.log("Error!!!!!");
+        //   console.log(err);
+        // }
         // console.log(notes);
         var tags=[];
         var notes2Tags = {};
         for (var j=0; j<notes.totalNotes; j++) {
-          // console.log(notes.notes[j].guid);
-          noteStore.getNote(notes.notes[j].guid,true,true,false,false,function(err,note) {
+          console.log("#"+j+":"+notes.notes[j].guid);
+          noteStore.getNote(notes.notes[j].guid,true,true,false,false).then(function(note) {
             // console.log(err);
             var title = note.title;
             while (title.indexOf(" ")!=-1) {
